@@ -1,4 +1,4 @@
-package util
+package signgo
 
 import (
 	"crypto"
@@ -29,4 +29,10 @@ func TestRsaSign(t *testing.T) {
 		t.Error("验证签名失败")
 	}
 
+}
+
+func TestParsePublicKey(t *testing.T) {
+	if _, err := ParsePublicKey("MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDWTGhVKKpjio1LTJJArcj7hFQfKzWdohmn6oYj5SyBgADqsrBn/v65n6FkMao+1j4QSyVQDzmPiiaGZ371wpTm3A+gvyhbQRux2FAX0YLtu0C/EwPLMUENzmvd+1D5+ALzjRQFenrCgCOI347iY6C4+ktM3KjHLJRRerPVuDWf2QIDAQAB"); err != nil {
+		t.Error(err)
+	}
 }

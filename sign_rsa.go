@@ -1,4 +1,4 @@
-package util
+package signgo
 
 import (
 	"crypto"
