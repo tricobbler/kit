@@ -1,3 +1,3 @@
-module sign
+module signgo
 
 go 1.14
