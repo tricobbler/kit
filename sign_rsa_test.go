@@ -2,6 +2,8 @@ package signgo
 
 import (
 	"crypto"
+	"crypto/md5"
+	"encoding/hex"
 	"testing"
 )
 
@@ -24,7 +26,7 @@ func TestRsaSign(t *testing.T) {
 		println("sign", sign)
 	}
 
-	if b, err := VerifyRsaSign([]byte(signContent), publicKey, sign, crypto.SHA256); err != nil {
+	if b, err := VerifyRsaSign([]byte(signContent), sign, publicKey, crypto.SHA256); err != nil {
 		t.Error(err)
 	} else if b {
 		println("签名验证成功")
@@ -41,10 +43,16 @@ func TestRsaEncryptDecrypt(t *testing.T) {
 	}
 
 	println("base64格式加密密文", str)
-	
+
 	bt2, err := RsaDecrypt(str, privateKey)
 	if err != nil {
 		t.Error(err)
 	}
 	println("解密后明文", string(bt2))
+}
+
+func md5V(str string) string {
+	h := md5.New()
+	h.Write([]byte(str))
+	return hex.EncodeToString(h.Sum(nil))
 }
