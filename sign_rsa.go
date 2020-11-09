@@ -17,7 +17,7 @@ var (
 	end_public_key        = "-----END PUBLIC KEY-----"
 )
 
-//RSA签名，返回base64编码后的签名结果
+//RSA签名
 //signContent：签名内容
 //privateKey：私钥
 //hs：签名算法
@@ -53,7 +53,7 @@ func VerifyRsaSign(signContent, sign []byte, publicKey string, hs crypto.Hash) (
 	return true, nil
 }
 
-//RSA加密，返回 base64 编码的密文
+//RSA加密
 func RsaEncrypt(msg []byte, publicKey string) ([]byte, error) {
 	key, err := parsePublicKey(publicKey)
 	if err != nil {
