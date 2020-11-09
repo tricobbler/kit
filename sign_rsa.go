@@ -11,46 +11,46 @@ import (
 	"strings"
 )
 
-const (
-	BEGIN_RSA_PRIVATE_KEY = "-----BEGIN RSA PRIVATE KEY-----"
-	END_RSA_PRIVATE_KEY   = "-----END RSA PRIVATE KEY-----"
-	BEGIN_PUBLIC_KEY      = "-----BEGIN PUBLIC KEY-----"
-	END_PUBLIC_KEY        = "-----END PUBLIC KEY-----"
+var (
+	begin_rsa_private_key = "-----BEGIN RSA PRIVATE KEY-----"
+	end_rsa_private_key   = "-----END RSA PRIVATE KEY-----"
+	begin_public_key      = "-----BEGIN PUBLIC KEY-----"
+	end_public_key        = "-----END PUBLIC KEY-----"
 )
 
-//验签
-//signContent：需要签名的内容字符串
+//RSA验签
+//signContent：签名内容
 //publicKey：公钥
-//sign：私钥的签名结果
+//sign：RsaSign()的签名结果
 //hs：签名算法
-func VerifyRsaSign(signContent, publicKey, sign string, hs crypto.Hash) (bool, error) {
+func VerifyRsaSign(signContent []byte, publicKey, sign string, hs crypto.Hash) (bool, error) {
 	pk, err := ParsePublicKey(publicKey)
 	if err != nil {
 		return false, err
 	}
 
 	hashed := hs.New()
-	hashed.Write([]byte(signContent))
+	hashed.Write(signContent)
 
-	btSign, err := base64.StdEncoding.DecodeString(sign)
+	deBt, err := base64.StdEncoding.DecodeString(sign)
 	if err != nil {
 		return false, err
 	}
 
-	err = rsa.VerifyPKCS1v15(pk, hs, hashed.Sum(nil), btSign)
+	err = rsa.VerifyPKCS1v15(pk, hs, hashed.Sum(nil), deBt)
 	if err != nil {
 		return false, err
 	}
 	return true, nil
 }
 
-//签名
+//RSA签名，返回base64编码后的签名结果
 //signContent：签名内容
 //privateKey：私钥
 //hs：签名算法
-func RsaSign(signContent, privateKey string, hs crypto.Hash) (string, error) {
+func RsaSign(signContent []byte, privateKey string, hs crypto.Hash) (string, error) {
 	hashed := hs.New()
-	hashed.Write([]byte(signContent))
+	hashed.Write(signContent)
 
 	priKey, err := ParsePrivateKey(privateKey)
 	if err != nil {
@@ -58,6 +58,7 @@ func RsaSign(signContent, privateKey string, hs crypto.Hash) (string, error) {
 	}
 
 	signature, err := rsa.SignPKCS1v15(rand.Reader, priKey, hs, hashed.Sum(nil))
+
 	if err != nil {
 		return "", err
 	}
@@ -78,11 +79,11 @@ func ParsePublicKey(publicKey string) (*rsa.PublicKey, error) {
 }
 
 func FormatPublicKey(publicKey string) string {
-	if !strings.HasPrefix(publicKey, BEGIN_PUBLIC_KEY) {
-		publicKey = BEGIN_PUBLIC_KEY + "\n" + publicKey
+	if !strings.HasPrefix(publicKey, begin_public_key) {
+		publicKey = begin_public_key + "\n" + publicKey
 	}
-	if !strings.HasSuffix(publicKey, END_PUBLIC_KEY) {
-		publicKey = publicKey + "\n" + END_PUBLIC_KEY
+	if !strings.HasSuffix(publicKey, end_public_key) {
+		publicKey = publicKey + "\n" + end_public_key
 	}
 	return publicKey
 }
@@ -101,11 +102,38 @@ func ParsePrivateKey(privateKey string) (*rsa.PrivateKey, error) {
 }
 
 func FormatPrivateKey(privateKey string) string {
-	if !strings.HasPrefix(privateKey, BEGIN_RSA_PRIVATE_KEY) {
-		privateKey = BEGIN_RSA_PRIVATE_KEY + "\n" + privateKey
+	if !strings.HasPrefix(privateKey, begin_rsa_private_key) {
+		privateKey = begin_rsa_private_key + "\n" + privateKey
 	}
-	if !strings.HasSuffix(privateKey, END_RSA_PRIVATE_KEY) {
-		privateKey = privateKey + "\n" + END_RSA_PRIVATE_KEY
+	if !strings.HasSuffix(privateKey, end_rsa_private_key) {
+		privateKey = privateKey + "\n" + end_rsa_private_key
 	}
 	return privateKey
+}
+
+//RSA加密，返回 base64 编码的密文
+func RsaEncrypt(msg []byte, publicKey string) (string, error) {
+	key, err := ParsePublicKey(publicKey)
+	if err != nil {
+		return "", err
+	}
+
+	bt, err := rsa.EncryptPKCS1v15(rand.Reader, key, msg)
+	if err != nil {
+		return "", err
+	}
+	return base64.StdEncoding.EncodeToString(bt), nil
+}
+
+//RSA解密
+func RsaDecrypt(encodeString, privateKey string) ([]byte, error) {
+	key, err := ParsePrivateKey(privateKey)
+	if err != nil {
+		return nil, err
+	}
+	bt, err := base64.StdEncoding.DecodeString(encodeString)
+	if err != nil {
+		return nil, err
+	}
+	return rsa.DecryptPKCS1v15(rand.Reader, key, bt)
 }
