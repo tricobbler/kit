@@ -25,7 +25,7 @@ func RsaSign(signContent []byte, privateKey string, hs crypto.Hash) ([]byte, err
 	hashed := hs.New()
 	hashed.Write(signContent)
 
-	priKey, err := ParsePrivateKey(privateKey)
+	priKey, err := parsePrivateKey(privateKey)
 	if err != nil {
 		return nil, err
 	}
@@ -38,7 +38,7 @@ func RsaSign(signContent []byte, privateKey string, hs crypto.Hash) ([]byte, err
 //sign：RsaSign()的签名结果
 //hs：签名算法
 func VerifyRsaSign(signContent, sign []byte, publicKey string, hs crypto.Hash) (bool, error) {
-	pk, err := ParsePublicKey(publicKey)
+	pk, err := parsePublicKey(publicKey)
 	if err != nil {
 		return false, err
 	}
@@ -55,7 +55,7 @@ func VerifyRsaSign(signContent, sign []byte, publicKey string, hs crypto.Hash) (
 
 //RSA加密，返回 base64 编码的密文
 func RsaEncrypt(msg []byte, publicKey string) ([]byte, error) {
-	key, err := ParsePublicKey(publicKey)
+	key, err := parsePublicKey(publicKey)
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +64,7 @@ func RsaEncrypt(msg []byte, publicKey string) ([]byte, error) {
 
 //RSA解密
 func RsaDecrypt(ciphertext []byte, privateKey string) ([]byte, error) {
-	key, err := ParsePrivateKey(privateKey)
+	key, err := parsePrivateKey(privateKey)
 	if err != nil {
 		return nil, err
 	}
@@ -74,8 +74,8 @@ func RsaDecrypt(ciphertext []byte, privateKey string) ([]byte, error) {
 	return rsa.DecryptPKCS1v15(rand.Reader, key, ciphertext)
 }
 
-func ParsePublicKey(publicKey string) (*rsa.PublicKey, error) {
-	publicKey = FormatPublicKey(publicKey)
+func parsePublicKey(publicKey string) (*rsa.PublicKey, error) {
+	publicKey = formatPublicKey(publicKey)
 	block, _ := pem.Decode([]byte(publicKey))
 	if block == nil {
 		return nil, errors.New("publicKey error")
@@ -87,7 +87,7 @@ func ParsePublicKey(publicKey string) (*rsa.PublicKey, error) {
 	return pubKey.(*rsa.PublicKey), nil
 }
 
-func FormatPublicKey(publicKey string) string {
+func formatPublicKey(publicKey string) string {
 	if !strings.HasPrefix(publicKey, begin_public_key) {
 		publicKey = begin_public_key + "\n" + publicKey
 	}
@@ -97,8 +97,8 @@ func FormatPublicKey(publicKey string) string {
 	return publicKey
 }
 
-func ParsePrivateKey(privateKey string) (*rsa.PrivateKey, error) {
-	privateKey = FormatPrivateKey(privateKey)
+func parsePrivateKey(privateKey string) (*rsa.PrivateKey, error) {
+	privateKey = formatPrivateKey(privateKey)
 	block, _ := pem.Decode([]byte(privateKey))
 	if block == nil {
 		return nil, errors.New("publicKey error")
@@ -110,7 +110,7 @@ func ParsePrivateKey(privateKey string) (*rsa.PrivateKey, error) {
 	return priKey.(*rsa.PrivateKey), nil
 }
 
-func FormatPrivateKey(privateKey string) string {
+func formatPrivateKey(privateKey string) string {
 	if !strings.HasPrefix(privateKey, begin_rsa_private_key) {
 		privateKey = begin_rsa_private_key + "\n" + privateKey
 	}
