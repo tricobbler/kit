@@ -17,6 +17,21 @@ var (
 	end_public_key        = "-----END PUBLIC KEY-----"
 )
 
+//RSA签名，返回base64编码后的签名结果
+//signContent：签名内容
+//privateKey：私钥
+//hs：签名算法
+func RsaSign(signContent []byte, privateKey string, hs crypto.Hash) ([]byte, error) {
+	hashed := hs.New()
+	hashed.Write(signContent)
+
+	priKey, err := ParsePrivateKey(privateKey)
+	if err != nil {
+		return nil, err
+	}
+	return rsa.SignPKCS1v15(rand.Reader, priKey, hs, hashed.Sum(nil))
+}
+
 //RSA验签
 //signContent：签名内容
 //publicKey：公钥
@@ -38,19 +53,25 @@ func VerifyRsaSign(signContent, sign []byte, publicKey string, hs crypto.Hash) (
 	return true, nil
 }
 
-//RSA签名，返回base64编码后的签名结果
-//signContent：签名内容
-//privateKey：私钥
-//hs：签名算法
-func RsaSign(signContent []byte, privateKey string, hs crypto.Hash) ([]byte, error) {
-	hashed := hs.New()
-	hashed.Write(signContent)
-
-	priKey, err := ParsePrivateKey(privateKey)
+//RSA加密，返回 base64 编码的密文
+func RsaEncrypt(msg []byte, publicKey string) ([]byte, error) {
+	key, err := ParsePublicKey(publicKey)
 	if err != nil {
 		return nil, err
 	}
-	return rsa.SignPKCS1v15(rand.Reader, priKey, hs, hashed.Sum(nil))
+	return rsa.EncryptPKCS1v15(rand.Reader, key, msg)
+}
+
+//RSA解密
+func RsaDecrypt(ciphertext []byte, privateKey string) ([]byte, error) {
+	key, err := ParsePrivateKey(privateKey)
+	if err != nil {
+		return nil, err
+	}
+	if err != nil {
+		return nil, err
+	}
+	return rsa.DecryptPKCS1v15(rand.Reader, key, ciphertext)
 }
 
 func ParsePublicKey(publicKey string) (*rsa.PublicKey, error) {
@@ -97,25 +118,4 @@ func FormatPrivateKey(privateKey string) string {
 		privateKey = privateKey + "\n" + end_rsa_private_key
 	}
 	return privateKey
-}
-
-//RSA加密，返回 base64 编码的密文
-func RsaEncrypt(msg []byte, publicKey string) ([]byte, error) {
-	key, err := ParsePublicKey(publicKey)
-	if err != nil {
-		return nil, err
-	}
-	return rsa.EncryptPKCS1v15(rand.Reader, key, msg)
-}
-
-//RSA解密
-func RsaDecrypt(ciphertext []byte, privateKey string) ([]byte, error) {
-	key, err := ParsePrivateKey(privateKey)
-	if err != nil {
-		return nil, err
-	}
-	if err != nil {
-		return nil, err
-	}
-	return rsa.DecryptPKCS1v15(rand.Reader, key, ciphertext)
 }
