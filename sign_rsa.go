@@ -101,7 +101,7 @@ func parsePrivateKey(privateKey string) (*rsa.PrivateKey, error) {
 	privateKey = formatPrivateKey(privateKey)
 	block, _ := pem.Decode([]byte(privateKey))
 	if block == nil {
-		return nil, errors.New("publicKey error")
+		return nil, errors.New("privateKey error")
 	}
 	priKey, err := x509.ParsePKCS8PrivateKey(block.Bytes)
 	if err != nil {
