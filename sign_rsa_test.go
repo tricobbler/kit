@@ -47,5 +47,10 @@ func TestRsaEncryptDecrypt(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	println("解密后明文", string(bt2))
+
+	deContent := string(bt2)
+	if signContent == deContent {
+		println("解密成功", deContent)
+	}
+
 }
