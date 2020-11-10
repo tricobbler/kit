@@ -1,4 +1,4 @@
-# golang RSA签名与验签，加密与解密的实现
+# golang RSA签名与验签，加密与解密
 公私钥生成：```sh gen_rsa_key.sh```
 
 ### 签名流程（签名算法使用crypto.SHA256）
