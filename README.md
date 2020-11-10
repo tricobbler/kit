@@ -8,7 +8,7 @@
 
 ### 验签流程
 * 获取请求结果body字符串
-* 获取请求头sign签名串
+* 获取请求头sign签名串，并对sign进行base64解码
 * 使用公钥对body字符串和sign签名串进行验签
 
 demo参考sign_rsa_test.go中的示例
