@@ -1,3 +1,3 @@
-module github.com/tricobbler/sign-go
+module github.com/tricobbler/kit
 
 go 1.14

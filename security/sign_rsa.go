@@ -1,4 +1,4 @@
-package signgo
+package security
 
 import (
 	"crypto"
