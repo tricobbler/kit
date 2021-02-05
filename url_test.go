@@ -50,7 +50,7 @@ func TestPickUrlsSubDomains(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := PickUrlsSubDomains(tt.args.urls); !reflect.DeepEqual(got, tt.want) {
+			if got := PickUrlSubDomains(tt.args.urls); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("PickUrlsSubDomains() = %v, want %v", got, tt.want)
 			}
 		})

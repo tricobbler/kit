@@ -20,7 +20,7 @@ func PickUrlSubDomain(url string) string {
 }
 
 //从url数组中提取子域名
-func PickUrlsSubDomains(urls []string) []string {
+func PickUrlSubDomains(urls []string) []string {
 	var newUrls []string
 	for _, v := range urls {
 		url := PickUrlSubDomain(v)
