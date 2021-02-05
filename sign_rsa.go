@@ -5,8 +5,10 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
+	"encoding/base64"
 	"encoding/pem"
 	"errors"
+	"fmt"
 	"strings"
 )
 
@@ -62,6 +64,16 @@ func RsaEncrypt(msg []byte, publicKey string) ([]byte, error) {
 	return rsa.EncryptPKCS1v15(rand.Reader, key, msg)
 }
 
+//RSA加密并转换为base64
+func RsaEncryptToBase64(msg []byte, publicKey string) string {
+	if bt, err := RsaEncrypt(msg, publicKey); err != nil {
+		fmt.Println("signgo.RsaEncryptToBase64.RsaEncrypt", err.Error())
+	} else {
+		return base64.StdEncoding.EncodeToString(bt)
+	}
+	return ""
+}
+
 //RSA解密
 func RsaDecrypt(ciphertext []byte, privateKey string) ([]byte, error) {
 	key, err := parsePrivateKey(privateKey)
@@ -72,6 +84,20 @@ func RsaDecrypt(ciphertext []byte, privateKey string) ([]byte, error) {
 		return nil, err
 	}
 	return rsa.DecryptPKCS1v15(rand.Reader, key, ciphertext)
+}
+
+//RSA解密 RsaEncryptToBase64（RSA加密并转换为base64） 后的结果
+func RsaDecryptFromBase64(str string, privateKey string) string {
+	if bt, err := base64.StdEncoding.DecodeString(str); err != nil {
+		fmt.Println("signgo.RsaDecryptFromBase64", err.Error())
+	} else {
+		if bt, err := RsaDecrypt(bt, privateKey); err != nil {
+			fmt.Println("signgo.RsaDecryptFromBase64", err.Error())
+		} else {
+			return string(bt)
+		}
+	}
+	return ""
 }
 
 func parsePublicKey(publicKey string) (*rsa.PublicKey, error) {

@@ -15,42 +15,197 @@ var (
 	publicKey = "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCQ+xmuNS9IvW8zZzDLQLKRmqRMseReWAgG3BBRiYF7YrYs6HTw5fcl07Ep9Rz1TzufHsOK575dslbCL/A/w9OAkGxrwW7f+Cw9V2oLGtyvtGTQKipKfROaGx+GjQxhcncx/H1KP1S2/y5iTBOouStPYP8Peb8RdOcwhjyxQzrBNQIDAQAB"
 )
 
-//签名与验签 （签名为[]byte类型，通过http传输的时候，需要base64编码或者选择其它编码方式）
-//如果发送方进行了base64编码，接收方需要进行base64解码才能进行验签，不能直接对base64的sign进行验签
 func TestRsaSign(t *testing.T) {
-	//私钥签名
-	sign, err := RsaSign([]byte(signContent), privateKey, crypto.SHA256)
-	if err != nil {
-		t.Error(err)
+	type args struct {
+		signContent []byte
+		privateKey  string
+		hs          crypto.Hash
 	}
-
-	//公钥验签
-	if b, err := VerifyRsaSign([]byte(signContent), sign, publicKey, crypto.SHA256); err != nil {
-		t.Error(err)
-	} else if b {
-		println("签名验证成功")
-	} else {
-		t.Error("验证签名失败")
+	tests := []struct {
+		name    string
+		args    args
+		want    []byte
+		wantErr bool
+	}{
+		{
+			name: "RSA签名",
+			args: args{
+				signContent: []byte(signContent),
+				privateKey:  privateKey,
+				hs:          crypto.SHA256,
+			},
+			wantErr: false,
+		},
 	}
-
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := RsaSign(tt.args.signContent, tt.args.privateKey, tt.args.hs)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("RsaSign() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+		})
+	}
 }
 
-//加密与解密（密文为[]byte类型，通过http传输的时候，需要base64编码或者选择其它编码方式）
-//如果发送方进行了base64编码，接收方需要进行base64解码才能进行解密，不能直接对base64进行解密
-func TestRsaEncryptDecrypt(t *testing.T) {
-	str, err := RsaEncrypt([]byte(signContent), publicKey)
-	if err != nil {
-		t.Error(err)
+func TestVerifyRsaSign(t *testing.T) {
+	sign, _ := RsaSign([]byte(signContent), privateKey, crypto.SHA256)
+	type args struct {
+		signContent []byte
+		sign        []byte
+		publicKey   string
+		hs          crypto.Hash
 	}
-
-	bt2, err := RsaDecrypt(str, privateKey)
-	if err != nil {
-		t.Error(err)
+	tests := []struct {
+		name    string
+		args    args
+		want    bool
+		wantErr bool
+	}{
+		{
+			name: "RSA验签",
+			args: args{
+				signContent: []byte(signContent),
+				sign:        sign,
+				publicKey:   publicKey,
+				hs:          crypto.SHA256,
+			},
+			want:    true,
+			wantErr: false,
+		},
 	}
-
-	deContent := string(bt2)
-	if signContent == deContent {
-		println("解密成功", deContent)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := VerifyRsaSign(tt.args.signContent, tt.args.sign, tt.args.publicKey, tt.args.hs)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("VerifyRsaSign() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("VerifyRsaSign() = %v, want %v", got, tt.want)
+			}
+		})
 	}
+}
 
+func TestRsaEncrypt(t *testing.T) {
+	type args struct {
+		msg       []byte
+		publicKey string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    []byte
+		wantErr bool
+	}{
+		{
+			name: "RSA加密",
+			args: args{
+				msg:       []byte(signContent),
+				publicKey: publicKey,
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := RsaEncrypt(tt.args.msg, tt.args.publicKey)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("RsaEncrypt() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+		})
+	}
+}
+
+func TestRsaDecrypt(t *testing.T) {
+	ciphertext, _ := RsaEncrypt([]byte(signContent), publicKey)
+
+	type args struct {
+		ciphertext []byte
+		privateKey string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    []byte
+		wantErr bool
+	}{
+		{
+			name: "RSA解密",
+			args: args{
+				ciphertext: ciphertext,
+				privateKey: privateKey,
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := RsaDecrypt(tt.args.ciphertext, tt.args.privateKey)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("RsaDecrypt() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+		})
+	}
+}
+
+func TestRsaEncryptToBase64(t *testing.T) {
+	type args struct {
+		msg       []byte
+		publicKey string
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{
+			name: "RSA加密并转换为base64",
+			args: args{
+				msg:       []byte(signContent),
+				publicKey: publicKey,
+			},
+			want: "",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := RsaEncryptToBase64(tt.args.msg, tt.args.publicKey); got == tt.want {
+				t.Errorf("RsaEncryptToBase64() = %v, not want %v", got, tt.want)
+			} else {
+				t.Log(got)
+			}
+		})
+	}
+}
+
+func TestRsaDecryptFromBase64(t *testing.T) {
+	type args struct {
+		str        string
+		privateKey string
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{
+			name: "RSA解密 RsaEncryptToBase64（RSA加密并转换为base64） 后的结果",
+			args: args{
+				str:        "jcUROokpkW2HlXGBiJU2E7QI6KNJxX4tejqFIlr2rXh6W6xapW8cSIPaggYLI97uRqxMnjM2Lk9nFDjRI6UmjkyxycKR28AHFPCqdyyfhHu/Unxr07BPhb1hQTYzl0gNM0fm33X1OpVANixtr8p3oQpm8QlhOjZ/Ua1VPTS9D0I=",
+				privateKey: privateKey,
+			},
+			want: signContent,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := RsaDecryptFromBase64(tt.args.str, tt.args.privateKey); got != tt.want {
+				t.Errorf("RsaDecryptFromBase64() = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }
